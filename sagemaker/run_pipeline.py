@@ -3,7 +3,7 @@ import sagemaker
 from sagemaker.processing import ScriptProcessor, ProcessingInput, ProcessingOutput
 from sagemaker.workflow.steps import ProcessingStep
 from sagemaker.workflow.pipeline import Pipeline
-import json
+from sagemaker.workflow.triggers import PipelineSchedule
 
 sf_account_id = "lnb99345.us-east-1"
 sf_secret_id = "snowflake_credentials"
@@ -55,8 +55,15 @@ def main():
     )
 
     pipeline.upsert(role_arn=role)
-    execution = pipeline.start()
-    print(execution.describe())
+    #execution = pipeline.start()
+    #print(execution.describe())
+
+    my_datetime_schedule = PipelineSchedule(
+        name="snowflake-pipeline-schedule", 
+        cron="30 13 ? * * *"
+    )
+    pipeline.put_triggers(triggers=[my_datetime_schedule], role_arn=role)
+    print(pipeline.describe_trigger("snowflake-pipeline-schedule"))
     
 
 
