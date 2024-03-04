@@ -25,11 +25,13 @@ def main():
        "SF_WAREHOUSE": warehouse,
        "SF_DATABASE": database,
        "SF_SCHEMA": schema,
-       "AWS_REGION": region}
+       "AWS_REGION": region,
+       "PYTHONPATH": "/opt/program/src"}
     
     snowflake_image = "767397884728.dkr.ecr.us-east-1.amazonaws.com/snowflake:latest"
     role = "arn:aws:iam::767397884728:role/SageMakerSnowFlakeExampleIAMRole-"
 
+    # collect dataset on Snowflake
     script_processor = ScriptProcessor(command=['python3'],
             image_uri=snowflake_image,
             role=role,
@@ -46,6 +48,8 @@ def main():
         code='src/collect_data.py',
         job_arguments=["--input", "COMMUNITYFEEDMEDIASIGNAL", "--output", "TRAIN_DATASET_V4"]
     )
+
+    # train pytorch
     
     pipeline_name = f"SnowflakePipeline"
     pipeline = Pipeline(
@@ -55,12 +59,12 @@ def main():
     )
 
     pipeline.upsert(role_arn=role)
-    #execution = pipeline.start()
-    #print(execution.describe())
+    execution = pipeline.start()
+    print(execution.describe())
 
     my_datetime_schedule = PipelineSchedule(
         name="snowflake-pipeline-schedule", 
-        cron="30 13 ? * * *"
+        cron="0 6 ? * * *"
     )
     pipeline.put_triggers(triggers=[my_datetime_schedule], role_arn=role)
     print(pipeline.describe_trigger("snowflake-pipeline-schedule"))
