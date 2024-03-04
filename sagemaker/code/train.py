@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import os
 import pandas as pd
 import snowflake.connector
-import xxhash
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,6 +15,8 @@ from tqdm import tqdm
 from snowflake_utils import connect
 
 from typing import Dict
+
+from model import CollaborativeFilteringModel, my_hash, save_model
 
 def collect_dataset(ctx: snowflake.connector.SnowflakeConnection, input: str) -> pd.DataFrame:
     # Collect dataset
@@ -43,26 +44,6 @@ class CustomDataset(Dataset):
             'labels': {'TIMESPENT': labels[0], 'HAS_REACTIONS': has_reactions}
         }
 
-
-class CollaborativeFilteringModel(nn.Module):
-    def __init__(self, num_users, num_posts, embedding_dim):
-        super(CollaborativeFilteringModel, self).__init__()
-        self.num_users = num_users
-        self.num_posts = num_posts
-        self.user_embedding = nn.Embedding(num_users, embedding_dim)
-        self.post_embedding = nn.Embedding(num_posts, embedding_dim)
-        
-    def forward(self, user_ids, post_ids):
-        user_ids %= self.num_users
-        post_ids %= self.num_posts
-        user_embedded = self.user_embedding(user_ids)
-        post_embedded = self.post_embedding(post_ids)
-        interaction = (user_embedded * post_embedded).sum(dim=1)
-        prediction = torch.sigmoid(interaction)
-        return prediction
-
-def my_hash(s: str) -> int:
-    return xxhash.xxh32(s).intdigest()
 
 def dict_to_device(dic: Dict, device: str) -> Dict:
     return {k: v.to(device) for k, v in dic.items()}
@@ -162,8 +143,7 @@ def main():
         # Print average validation loss per epoch
         print(f'Epoch {epoch+1}, Validation Loss: {val_loss / len(val_dataloader)}, AUC-ROC: {auc_roc_score}')
 
-        with open(os.path.join(args.model_dir, 'model.pth'), 'wb') as f:
-            torch.save(model.state_dict(), f)
+    save_model(model, os.path.join(args.model_dir, 'model.pth'))
     
 
 if __name__ == "__main__":
