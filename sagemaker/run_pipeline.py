@@ -39,22 +39,22 @@ def main():
     role = "arn:aws:iam::767397884728:role/SageMakerSnowFlakeExampleIAMRole-"
 
     # collect dataset on Snowflake
-    # script_processor = ScriptProcessor(command=['python3'],
-    #         image_uri=snowflake_image,
-    #         role=role,
-    #         instance_count=1,
-    #         instance_type='ml.m5.xlarge',
-    #         env=env,
-    #         sagemaker_session=pipeline_session)
+    script_processor = ScriptProcessor(command=['python3'],
+            image_uri=snowflake_image,
+            role=role,
+            instance_count=1,
+            instance_type='ml.m5.xlarge',
+            env=env,
+            sagemaker_session=pipeline_session)
     
     
-    # snowflake_step = ProcessingStep(
-    #     name="SnowflakeSQLQueries",
-    #     processor=script_processor,
-    #     outputs=[ProcessingOutput(output_name="records_count", source='/opt/ml/processing/output')],
-    #     code='code/collect_data.py',
-    #     job_arguments=["--input", "COMMUNITYFEEDMEDIASIGNAL", "--output", "TRAIN_DATASET_V4"]
-    # )
+    snowflake_step = ProcessingStep(
+        name="SnowflakeSQLQueries",
+        processor=script_processor,
+        outputs=[ProcessingOutput(output_name="records_count", source='/opt/ml/processing/output')],
+        code='code/collect_data.py',
+        job_arguments=["--input", "COMMUNITYFEEDMEDIASIGNAL", "--output", "TRAIN_DATASET_V4"]
+    )
 
     # train pytorch
     pytorch_estimator = PyTorch('train.py',
@@ -126,9 +126,8 @@ def main():
     pipeline_name = f"SnowflakePipeline"
     pipeline = Pipeline(
         name=pipeline_name,
-        #steps=[snowflake_step, training_step],
         #steps=[training_step, model_step, step_register],
-        steps=[training_step, model_step],
+        steps=[snowflake_step, training_step, model_step],
         sagemaker_session=pipeline_session
     )
 
