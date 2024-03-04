@@ -5,41 +5,11 @@ import argparse
 import os
 import pandas as pd
 import snowflake.connector
-import json
-import boto3
 
-def get_credentials(secret_id: str, region_name: str) -> str:
-    
-    client = boto3.client('secretsmanager', region_name=region_name)
-    response = client.get_secret_value(SecretId=secret_id)
-    secrets_value = json.loads(response['SecretString'])    
-    
-    return secrets_value
+from snowflake_utils import connect
 
-def connect(secret_id: str, account: str, warehouse: str, database: str, schema: str, protocol: str, region: str) -> snowflake.connector.SnowflakeConnection:
-    
-    secret_value = get_credentials(secret_id, region)
-    sf_user = secret_value['username']
-    sf_password = secret_value['password']
-    sf_account = account
-    sf_warehouse = warehouse
-    sf_database = database
-    sf_schema = schema
-    sf_protocol = protocol
-    
-    print(f"sf_user={sf_user}, sf_password=****, sf_account={sf_account}, sf_warehouse={sf_warehouse}, "
-          f"sf_database={sf_database}, sf_schema={sf_schema}, sf_protocol={sf_protocol}")    
-    
-    # Read to connect to snowflake
-    ctx = snowflake.connector.connect(user=sf_user,
-                                      password=sf_password,
-                                      account=sf_account,
-                                      warehouse=sf_warehouse,
-                                      database=sf_database,
-                                      schema=sf_schema,
-                                      protocol=sf_protocol)
-    
-    return ctx
+
+
 
 def collect_dataset(ctx: snowflake.connector.SnowflakeConnection, input: str, output: str, schema: str, database: str) -> pd.DataFrame:
     # Collect dataset

@@ -5,9 +5,9 @@ FROM python:3.10-slim-buster
 WORKDIR /opt/program
 
 # Copy the requirements file into the image
-COPY src/requirements.txt /opt/program/
-RUN mkdir src
-COPY src/snowflake_utils.py src
+COPY code/requirements.txt /opt/program/
+RUN mkdir code
+COPY code/snowflake_utils.py code
 
 # Install Python dependencies from requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
