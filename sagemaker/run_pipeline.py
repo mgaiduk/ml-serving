@@ -9,6 +9,7 @@ from sagemaker.pytorch.estimator import PyTorch
 from sagemaker.workflow.pipeline_context import PipelineSession
 from sagemaker.pytorch.model import PyTorchModel
 from sagemaker.inputs import CreateModelInput
+from sagemaker.workflow.step_collections import RegisterModel
 
 sf_account_id = "lnb99345.us-east-1"
 sf_secret_id = "snowflake_credentials"
@@ -59,11 +60,11 @@ def main():
     pytorch_estimator = PyTorch('train.py',
         instance_type='ml.p3.2xlarge',
         instance_count=1,
-        framework_version='1.8.0',
-        py_version='py3',
+        framework_version='1.11.0',
+        py_version='py38',
         hyperparameters = {
             "input": "TRAIN_DATASET_V4",
-            'num-epochs': 5, 
+            'num-epochs': 100, 
             'lr': 0.001},
         source_dir = "code",
         role=role,
@@ -86,8 +87,8 @@ def main():
     pytorch_model = PyTorchModel(model_data=training_step.properties.ModelArtifacts.S3ModelArtifacts,
         role=role,
         entry_point='inference.py', # Your script for processing inference requests
-        framework_version='1.8.0',
-        py_version='py3',
+        framework_version='1.11.0',
+        py_version='py38',
         source_dir="code",
         sagemaker_session=pipeline_session,
     )
@@ -97,12 +98,36 @@ def main():
         step_args=pytorch_model.create(instance_type="ml.m5.xlarge"),
     )
 
+    # register
+    # step_register = RegisterModel(
+    #     name="PytorchRegisterModel",
+    #     model=pytorch_model,
+    #     content_types=["application/json"],
+    #     response_types=["application/json"],
+    #     inference_instances=["ml.t2.medium"],
+    #     model_package_group_name='sipgroup',
+    # )
+    # register_model_step_args = pytorch_model.register(
+    #     content_types=["application/json"],
+    #     response_types=["application/json"],
+    #     inference_instances=["ml.t2.medium"],
+    #     model_package_group_name='sipgroup',
+    # )
+
+    # step_register = ModelStep(
+    #     name="PytorchRegisterModel",
+    #     step_args=register_model_step_args,
+    # )
+
+    # deploy for inference
+    # predictor = pytorch_model.deploy(instance_type='ml.m5.large', initial_instance_count=1)
 
     # assemble pipeline
     pipeline_name = f"SnowflakePipeline"
     pipeline = Pipeline(
         name=pipeline_name,
         #steps=[snowflake_step, training_step],
+        #steps=[training_step, model_step, step_register],
         steps=[training_step, model_step],
         sagemaker_session=pipeline_session
     )
