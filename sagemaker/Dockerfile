@@ -7,7 +7,9 @@ WORKDIR /opt/program
 # Copy the requirements file into the image
 COPY code/requirements.txt /opt/program/
 RUN mkdir code
-COPY code/snowflake_utils.py code
+COPY code/*.py code
+# copy requirements to the code folder to make it available to nested sub scripts as well
+COPY code/requirements.txt code
 
 # Install Python dependencies from requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt

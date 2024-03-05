@@ -70,7 +70,7 @@ def main():
 
     protocol = "https"
     ctx = connect(secret_id, account, warehouse, database, schema, protocol, region, profile_name=args.profile_name)
-    df = collect_dataset(ctx, input="TRAIN_DATASET_V4")
+    df = collect_dataset(ctx, input=args.input)
     df[['USERID', 'MEDIAID', 'MEDIATAKENBYID']] = df[['USERID', 'MEDIAID', 'MEDIATAKENBYID']].applymap(my_hash)
     
 
@@ -107,7 +107,7 @@ def main():
 
 
     for epoch in range(num_epochs):
-        for batch in tqdm(train_dataloader):
+        for batch in train_dataloader:
             features = batch['features']
             labels = batch['labels']
             features = dict_to_device(features, device)
