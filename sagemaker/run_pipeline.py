@@ -11,7 +11,7 @@ from sagemaker.pytorch.model import PyTorchModel
 from sagemaker.inputs import CreateModelInput
 from sagemaker.workflow.step_collections import RegisterModel
 
-DATASET_NAME = "TRAIN_DATASET"
+DATASET_NAME = "TRAIN_DATASET_V2"
 sf_account_id = "lnb99345.us-east-1"
 sf_secret_id = "snowflake_credentials"
 warehouse = "XSMALL"
@@ -51,7 +51,7 @@ def main():
         name="SnowflakeSQLQueries",
         processor=script_processor,
         outputs=[ProcessingOutput(output_name="records_count", source='/opt/ml/processing/output')],
-        code='code/collect_data.py',
+        code='code/collect_data2.py',
         job_arguments=["--input", "COMMUNITYFEEDMEDIASIGNAL", "--output", DATASET_NAME]
     )
 

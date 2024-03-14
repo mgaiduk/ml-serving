@@ -2,3 +2,4 @@ boto3
 sagemaker
 snowflake-connector-python
 xxhash
+jinja2

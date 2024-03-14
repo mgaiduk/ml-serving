@@ -11,7 +11,7 @@ from snowflake_utils import connect
 
 
 
-def collect_dataset(ctx: snowflake.connector.SnowflakeConnection, input: str, output: str, schema: str, database: str) -> pd.DataFrame:
+def collect_dataset(ctx: snowflake.connector.SnowflakeConnection, input: str, output: str) -> pd.DataFrame:
     # Collect dataset
     cursor = ctx.cursor()
     #print(f"USE DATABASE {database}")
@@ -70,4 +70,4 @@ if __name__ == "__main__":
     
     protocol = "https"
     ctx = connect(secret_id, account, warehouse, database, schema, protocol, region)
-    num_records = collect_dataset(ctx, input=args.input, output=args.output, schema=schema, database=database)
+    num_records = collect_dataset(ctx, input=args.input, output=args.output)
