@@ -10,6 +10,7 @@ from sagemaker.workflow.pipeline_context import PipelineSession
 from sagemaker.pytorch.model import PyTorchModel
 from sagemaker.inputs import CreateModelInput
 from sagemaker.workflow.step_collections import RegisterModel
+from sagemaker.xgboost import XGBoost
 
 DATASET_NAME = "TRAIN_DATASET_V2"
 sf_account_id = "lnb99345.us-east-1"
@@ -77,6 +78,28 @@ def main():
         depends_on=[snowflake_step.name]
     )
 
+    xgboost_estimator = XGBoost(
+        entry_point='xgboost_train.py',
+        role=role,
+        framework_version='1.3-1',  # Specify your desired version
+        instance_count=1,
+        instance_type='ml.m5.4xlarge',
+        hyperparameters={
+            "input": DATASET_NAME,
+            'lr': 0.05,
+            'n-estimators': 100
+        },
+        source_dir = "code",
+        sagemaker_session=pipeline_session,
+        environment=env,
+    )
+
+    xgboost_training_step = TrainingStep(
+        name='XgBoostModelTraining',
+        estimator=xgboost_estimator,
+        depends_on=[snowflake_step.name]
+    )
+
     # deploy using a script that calls python sdk
     deploy_step = ProcessingStep(
         name="Deploy",
@@ -86,11 +109,19 @@ def main():
         job_arguments=["--model-data", training_step.properties.ModelArtifacts.S3ModelArtifacts]
     )
 
+    xgboost_deploy_step = ProcessingStep(
+        name="XgboostDeploy",
+        processor=script_processor,
+        code='code/xgboost_deploy.py',
+        depends_on=[xgboost_training_step.name],
+        job_arguments=["--model-data", xgboost_training_step.properties.ModelArtifacts.S3ModelArtifacts]
+    )
+
     # assemble pipeline
     pipeline_name = f"SnowflakePipeline"
     pipeline = Pipeline(
         name=pipeline_name,
-        steps=[snowflake_step, training_step, deploy_step],
+        steps=[xgboost_training_step, snowflake_step, training_step, deploy_step, xgboost_deploy_step],
         sagemaker_session=pipeline_session
     )
 
