@@ -19,9 +19,12 @@ from typing import Dict
 from model import CollaborativeFilteringModel, my_hash, save_model
 
 def collect_dataset(ctx: snowflake.connector.SnowflakeConnection, input: str) -> pd.DataFrame:
+    # train on a 7-day lookback window
+    filter_time = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
     # Collect dataset
     sql = f"""
     select * from {input}
+    where min_timestamp >= '{filter_time}'
     """
     df = pd.read_sql(sql, ctx)
     return df

@@ -165,6 +165,7 @@ def collect_dataset(ctx: snowflake.connector.SnowflakeConnection, input: str, ou
             min(timestamp) as min_timestamp,
             count_if(signalType = 'CFMediaAddedReactionSignal') as nReactions
             from events as a
+            where timestamp >= '2024-03-13'
             group by userId, mediaId, mediaTakenById, requestId
         ),
 
@@ -177,7 +178,7 @@ def collect_dataset(ctx: snowflake.connector.SnowflakeConnection, input: str, ou
             {% endfor %}
             {% endfor %}
             from aggregatedevents as a
-            inner join collapsedTakenByEvents as b
+            left join collapsedTakenByEvents as b
             on a.requestId = b.requestId
             and a.mediaTakenById = b.takenBy
         ),
@@ -192,7 +193,7 @@ def collect_dataset(ctx: snowflake.connector.SnowflakeConnection, input: str, ou
             {% endfor %}
             {% endfor %}
             from joinedEvents as a
-            inner join collapsedMediaEvents as b
+            left join collapsedMediaEvents as b
             on a.requestId = b.requestId
             and a.mediaId = b.mediaId
         ),
@@ -206,7 +207,7 @@ def collect_dataset(ctx: snowflake.connector.SnowflakeConnection, input: str, ou
             {% endfor %}
             {% endfor %}
             from joinedEvents2 as a
-            inner join collapsedUserEvents as b
+            left join collapsedUserEvents as b
             on a.requestId = b.requestId
             and a.userId = b.userId
         ),
@@ -220,7 +221,7 @@ def collect_dataset(ctx: snowflake.connector.SnowflakeConnection, input: str, ou
             {% endfor %}
             {% endfor %}
             from joinedEvents3 as a
-            inner join collapsedCrossEvents as b
+            left join collapsedCrossEvents as b
             on a.requestId = b.requestId
             and a.userId = b.userId
             and a.mediaTakenById = b.takenBy
