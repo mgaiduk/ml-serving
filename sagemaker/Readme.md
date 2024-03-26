@@ -2,7 +2,7 @@
 
 To run it, login with `aws sso login --profile <my_profile>` and pass in a name of the profile:
 ```bash
-python run_pipeline.py --profile-name ml-staging-admin
+python3 run_pipeline.py --profile-name ml-staging-admin
 ```
 
 
@@ -20,6 +20,10 @@ sudo docker push 767397884728.dkr.ecr.us-east-1.amazonaws.com/snowflake:latest
 ```
 Replace relevant account name and docker registry path to the one used for docker registry.
 
+To install local dependencies:
+```bash
+python3 -m pip install -r code/requirements.txt
+```
 ## Snowflake dataset collection
 ### Locally
 Setup an aws secret with snowflake credentials. Described here: https://aws.amazon.com/blogs/machine-learning/use-snowflake-as-a-data-source-to-train-ml-models-with-amazon-sagemaker/, in the "Store Snowflake credentials in Secrets Manager" part.  
@@ -37,6 +41,6 @@ This should run fresh dataset collection on Snowflake. In the end, if all went w
 Verify that it indeed corresponds to a time within the last 15 minutes.
 ### Running in Sagemaker Pipelines
 ```bash
-python run_pipeline.py --profile-name my_profile_name --stages snowflake
+python3 run_pipeline.py --profile-name my_profile_name --stages snowflake
 ```
 This will run a pipeline with a single step - Snowflake dataset collection
