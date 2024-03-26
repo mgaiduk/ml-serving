@@ -1,3 +1,4 @@
+import argparse
 import boto3
 import sagemaker
 from sagemaker.processing import ScriptProcessor, ProcessingInput, ProcessingOutput
@@ -14,18 +15,24 @@ from sagemaker.xgboost import XGBoost
 
 DATASET_NAME = "TRAIN_DATASET_V2"
 sf_account_id = "lnb99345.us-east-1"
-sf_secret_id = "snowflake_credentials"
 warehouse = "XSMALL"
 database = "PRODUCTION"
 schema = "SIGNALS"
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--profile-name", type=str, required=True, help="sso profile for aws cli")
+    parser.add_argument("--sf-secret-id", type=str, default="snowflake_credentials", help="aws secret with snowflake credentials")
+    parser.add_argument("--docker-image", type=str, default="767397884728.dkr.ecr.us-east-1.amazonaws.com/snowflake:latest", help="docker image")
+    parser.add_argument("--role", type=str, default="arn:aws:iam::767397884728:role/SageMakerSnowFlakeExampleIAMRole-", help="aws role with sagemaker permissions")
+    args = parser.parse_args()
 
-    session = boto3.session.Session(profile_name="ml-staging-admin")
+    session = boto3.session.Session(profile_name=args.profile_name)
     #sagemaker_session = sagemaker.Session(session)
     pipeline_session = PipelineSession(boto_session=session)
     region = session.region_name
     print(f"region={region}")
+    sf_secret_id = args.sf_secret_id
 
     env = {"SECRET_ID": sf_secret_id, 
        "SF_ACCOUNT": sf_account_id,
@@ -35,8 +42,8 @@ def main():
        "AWS_REGION": region,
        "PYTHONPATH": "/opt/program/code"}
     
-    snowflake_image = "767397884728.dkr.ecr.us-east-1.amazonaws.com/snowflake:latest"
-    role = "arn:aws:iam::767397884728:role/SageMakerSnowFlakeExampleIAMRole-"
+    snowflake_image = args.docker_image
+    role = args.role
 
     # collect dataset on Snowflake
     script_processor = ScriptProcessor(command=['python3'],
