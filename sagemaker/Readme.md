@@ -35,3 +35,8 @@ This should run fresh dataset collection on Snowflake. In the end, if all went w
 2024-03-26 13:46:20.736000
 ```
 Verify that it indeed corresponds to a time within the last 15 minutes.
+### Running in Sagemaker Pipelines
+```bash
+python run_pipeline.py --profile-name my_profile_name --stages snowflake
+```
+This will run a pipeline with a single step - Snowflake dataset collection

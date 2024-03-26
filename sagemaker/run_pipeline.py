@@ -22,6 +22,7 @@ schema = "SIGNALS"
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--profile-name", type=str, required=True, help="sso profile for aws cli")
+    parser.add_argument("--stages", type=str, default="all", choices=["all", "snowflake"], help="Which parts of the pipeline to run")
     parser.add_argument("--sf-secret-id", type=str, default="snowflake_credentials", help="aws secret with snowflake credentials")
     parser.add_argument("--docker-image", type=str, default="767397884728.dkr.ecr.us-east-1.amazonaws.com/snowflake:latest", help="docker image")
     parser.add_argument("--role", type=str, default="arn:aws:iam::767397884728:role/SageMakerSnowFlakeExampleIAMRole-", help="aws role with sagemaker permissions")
@@ -126,11 +127,19 @@ def main():
 
     # assemble pipeline
     pipeline_name = f"SnowflakePipeline"
-    pipeline = Pipeline(
-        name=pipeline_name,
-        steps=[xgboost_training_step, snowflake_step, training_step, deploy_step, xgboost_deploy_step],
-        sagemaker_session=pipeline_session
-    )
+    if args.stages == "snowflake":
+        pipeline = Pipeline(
+            name=pipeline_name,
+            steps=[snowflake_step],
+            sagemaker_session=pipeline_session
+        )
+    else:
+        pipeline = Pipeline(
+            name=pipeline_name,
+            steps=[xgboost_training_step, snowflake_step, training_step, deploy_step, xgboost_deploy_step],
+            sagemaker_session=pipeline_session
+        )
+    
 
     pipeline.upsert(role_arn=role)
     execution = pipeline.start()
